@@ -1,33 +1,74 @@
-import { InputGroup, Input, Button, List, InputGroupText } from "reactstrap";
+import { InputGroup, Input, Button, List } from "reactstrap";
+import SingleTodo from "./components/SingleTodo";
+import { useRef } from "react";
+import { useMyCustomHook } from "./hooks/custom";
 import "./App.css";
 
 function App() {
+  const inputRef = useRef(null);
+  const [state, dispatch] = useMyCustomHook();
+
+  const handleAddTodo = () => {
+    const value = inputRef.current.value;
+
+    if (value.trim() !== "") {
+      dispatch({
+        type: "add_new_todo",
+        payload: value,
+      });
+    } else {
+      alert("Type a text in the input box.");
+    }
+    inputRef.current.value = "";
+  };
+
   return (
     <div className="App">
       <h1>Todo List React App</h1>
       <InputGroup>
-        <Input />
-        <Button color="primary">Add Todo</Button>
+        <Input innerRef={inputRef} />
+        <Button onClick={handleAddTodo} color="primary">
+          Add Todo
+        </Button>
       </InputGroup>
       <main>
         <List style={{ padding: "0" }}>
-          <InputGroup style={{ marginBottom: "2px" }}>
-            <InputGroupText>
-              <Input
-                addon
-                aria-label="Checkbox for following text input"
-                type="checkbox"
+          {Object.entries(state.todos).map(([todoId, todoValue]) => {
+            const editMode = todoId === state.editId;
+
+            return (
+              <SingleTodo
+                key={todoId}
+                id={todoId}
+                dispatchAction={dispatch}
+                {...todoValue}
+                editMode={editMode}
               />
-            </InputGroupText>
-            <Input value="Todo 1" onChange={() => {}} />
-            <Button color="primary">Save</Button>
-            <Button color="secondary">Edit</Button>
-            <Button color="danger">Delete</Button>
-          </InputGroup>
+            );
+          })}
         </List>
       </main>
       <footer>
-        <Button color="danger">Clear Completed Todos</Button>
+        <Button
+          onClick={() =>
+            dispatch({
+              type: "clear_all",
+            })
+          }
+          color="danger"
+        >
+          Clear All Todos
+        </Button>
+        <Button
+          onClick={() =>
+            dispatch({
+              type: "clear_completed_todos",
+            })
+          }
+          color="danger"
+        >
+          Clear Completed Todos
+        </Button>
       </footer>
     </div>
   );
